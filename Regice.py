@@ -30,38 +30,40 @@ class Regice:
         bow1_v = np.array([bow1.get(key, 0) for key in keys])
         bow2_v = np.array([bow2.get(key, 0) for key in keys])
         similarity = np.dot(bow1_v, bow2_v) / (np.linalg.norm(bow1_v) * np.linalg.norm(bow2_v))
-
-        # デバッグ用
-        if np.isnan(similarity):
-            print(bow1_v)
         return similarity
 
     def make_bow(self, bstag):
         bow = defaultdict(lambda: 0)
-        # 子要素が存在しないbstagがきたときに空集合を返してしまう
-        # 自分の要素を取得できてないのでは？
-        for elm in bstag.children:
+        # 自分のタグ名やクラス名をベクトルに足したあと子要素も
+        bow = self.merge_defaultdict(bow, self.own_bow(bstag))
+        bow = self.merge_defaultdict(bow, self.children_bow(bstag.children))
+        self.bows.append(bow)
+        return bow
+
+    @staticmethod
+    def own_bow(bstag):
+        bow = defaultdict(lambda: 0)
+        # 自分のタグ名やクラス名をベクトルに足したあと子要素も
+        bow[bstag.name] += 1
+        for attr, vals in bstag.attrs.items():
+            bow[attr] += 1
+            if isinstance(vals, list):
+                for val in vals:
+                    bow[val] += 1
+            else:
+                bow[vals] += 1
+        return bow
+
+    def children_bow(self, children):
+        bow = defaultdict(lambda: 0)
+        for elm in children:
             if isinstance(elm, bs4.element.Tag):
-                # 自分のタグ名やクラス名をベクトルに足したあと子要素も
-                bow[elm.name] += 1
-                for attr, vals in elm.attrs.items():
-                    bow[attr] += 1
-                    if isinstance(vals, list):
-                        for val in vals:
-                            bow[val] += 1
-                    else:
-                        bow[vals] += 1
                 bow = self.merge_defaultdict(bow, self.make_bow(elm))
             elif isinstance(elm, bs4.element.NavigableString):
                 # 値をベクトルに追加
                 bow[elm] += 1
             else:
                 print('!!!!otherClass')
-
-        #　デバッグ用
-        if not bow:
-            print(bow)
-        self.bows.append(bow)
         return bow
 
     @staticmethod
