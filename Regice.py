@@ -12,7 +12,6 @@ class Regice:
         f = open(filepath, 'r')
         htmlcode = f.read()
         f.close()
-        # Webページを取得して解析する
         soup = bs4.BeautifulSoup(htmlcode, "html.parser")
         self.make_bow(soup.body)
         print(self.bows)
@@ -43,11 +42,10 @@ class Regice:
     @staticmethod
     def own_bow(bstag):
         bow = defaultdict(lambda: 0)
-        # 自分のタグ名やクラス名をベクトルに足したあと子要素も
         bow[bstag.name] += 1
         for attr, vals in bstag.attrs.items():
             bow[attr] += 1
-            if isinstance(vals, list):
+            if isinstance(vals, list):  # classなどはattrがlistで帰ってくるのでそれを足す
                 for val in vals:
                     bow[val] += 1
             else:
@@ -60,7 +58,6 @@ class Regice:
             if isinstance(elm, bs4.element.Tag):
                 bow = self.merge_defaultdict(bow, self.make_bow(elm))
             elif isinstance(elm, bs4.element.NavigableString):
-                # 値をベクトルに追加
                 bow[elm] += 1
             else:
                 print('!!!!otherClass')
