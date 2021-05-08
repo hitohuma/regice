@@ -20,13 +20,14 @@ class SuffixTree:
             child = node.search_child(tokens, size, tokens[node_start])
             if child is None: break
             child_len = child.len()
-            # whileとfor変更
-            for sub_match in range(1, child_len + 1):
+            sub_match = 1
+            while sub_match < child_len:
                 match = node_start + sub_match
                 # 節の途中で不一致もしくはtokensの終端になった場合
                 if match == size or tokens[match] != tokens[child.start + sub_match]:
                     return node, child, match, sub_match
-            node_start += child_len
+            # node_start += child_len
+            node_start += sub_match
             parent = node
             node = child
         # 過不足なく木のnodeとtokenの長さが一致した場合
@@ -83,12 +84,12 @@ class SuffixTree:
     # デバッグ用
     def print_node(self, node, tokens):
         if node.child is None:
-            # print('.' * node.depth + ','.join(tokens[node.start:]))
-            print(' ' * node.depth + tokens[node.start:])
+            print('.' * node.depth + ','.join(tokens[node.start:]))
+            # print(' ' * node.depth + tokens[node.start:])
         else:
             if node.start != SuffixTree.ROOT:
-                # print('*' * node.depth + ','.join(tokens[node.start:node.start + node.len()]))
-                print(' ' * node.depth + tokens[node.start:node.start + node.len()])
+                print('*' * node.depth + ','.join(tokens[node.start:node.start + node.len()]))
+                # print(' ' * node.depth + tokens[node.start:node.start + node.len()])
                 # if node.len() == 0:
                 #     print('stop')
                 # print(node.start, node.start + node.len())
@@ -152,12 +153,14 @@ class _Node:
 
 if __name__ == '__main__':
     tokens = ['body', '(string)', 'a', 'href', '(attr_val)', '(string)', '(tag_end)', '(string)', '(tag_end)', '(EOF)']
-    tokens = ['(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '( )', '(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '($)']
+    # tokens = ['(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '()', '(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '($)']
+    # tokens = []
     # tokens = 'banana banana$'
-    tokens = "aabbaaab$"
+    # tokens = "aabbaaab$"
     st = SuffixTree(tokens)
     # print(st.search_pattern(['(b)', '(a)', '(n)', '(a)', '(n)', '(a)']))
     # print(st.search_pattern(['(a)', '(n)', '(a)']))
+    print(st.search_pattern(['(a)', '(n)', '(a)']))
     # print([pattern for pattern in st.search_pattern_all(['(a)', '(n)', '(a)'])])
     st.print_node(st.root, tokens)
     # print(st.search_pattern('an'))
