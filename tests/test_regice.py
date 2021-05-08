@@ -2,9 +2,23 @@ import unittest
 from Regice import Regice
 from collections import defaultdict
 import math
+import bs4
 
 
 class TestRegice(unittest.TestCase):
+    def test_calc_tokenize(self):
+        htmlcode = """
+            <body>
+                <a href="https://aaaaaa.com">home</a>
+            </body>
+        """
+        soup = bs4.BeautifulSoup(htmlcode, "html.parser")
+        regice = Regice()
+        tokens = regice.tokenize(soup.body)
+        predicted = ['body', '(string)', 'a', 'href', '(attr_val)', '(string)', '(tag_end)', '(string)', '(tag_end)']
+        self.assertEqual(tokens, predicted)
+
+
     def test_calc_similarity(self):
         regice = Regice()
         bow1 = [('div', 4), ('p', 2), ('input', 3), ('form', 4)]

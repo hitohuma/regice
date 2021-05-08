@@ -8,11 +8,36 @@ class Regice:
     def __init__(self):
         self.bows = []
 
-    def analyze(self, filepath):
+    @staticmethod
+    def bs_from_file(filepath):
         f = open(filepath, 'r')
         htmlcode = f.read()
         f.close()
-        soup = bs4.BeautifulSoup(htmlcode, "html.parser")
+        return bs4.BeautifulSoup(htmlcode, "html.parser")
+
+    def tokenize_from_file(self, filepath):
+        soup = self.bs_from_file(filepath)
+        return self.tokenize(soup.body)
+
+    def tokenize(self, bstag):
+        tokens = list()
+        tokens.append(bstag.name)
+        for attr, vals in bstag.attrs.items():
+            tokens.append(attr)
+            tokens.append('(attr_val)')
+        for elm in bstag.children:
+            if isinstance(elm, bs4.element.Tag):
+                tokens += self.tokenize(elm)
+            elif isinstance(elm, bs4.element.NavigableString):
+                tokens.append('(string)')
+            else:
+                print('!!!!otherClass')
+        tokens.append('(tag_end)')
+        return tokens
+
+
+    def analyze(self, filepath):
+        soup = self.bs_from_file(filepath)
         self.make_bow(soup.body)
         print(self.bows)
         print(len(self.bows))
