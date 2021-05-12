@@ -35,7 +35,6 @@ class Regice:
         tokens.append('(tag_end)')
         return tokens
 
-
     def analyze(self, filepath):
         soup = self.bs_from_file(filepath)
         self.make_bow(soup.body)

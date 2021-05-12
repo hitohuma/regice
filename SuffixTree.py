@@ -8,10 +8,12 @@ class SuffixTree:
         self.root = _Node(SuffixTree.ROOT, 0)
         for i in range(len(tokens)):
             parent, child, match, sub_match = self.longest_match(self.root, i)
+            # print(parent, child, match, sub_match)
             self.insert_node(parent, child, match, sub_match)
             # self.print_node(self.root, tokens)
             # print(i)
 
+    # 文字の区切りの親ノード、ノード、ノードのスタート、サブマッチを返す
     def longest_match(self, node, node_start):
         tokens = self.tokens
         size = len(tokens)
@@ -25,13 +27,36 @@ class SuffixTree:
                 match = node_start + sub_match
                 # 節の途中で不一致もしくはtokensの終端になった場合
                 if match == size or tokens[match] != tokens[child.start + sub_match]:
+                    # print(sub_match)
                     return node, child, match, sub_match
-            # node_start += child_len
+                sub_match += 1
+            # print(child_len == sub_match)
             node_start += sub_match
             parent = node
             node = child
-        # 過不足なく木のnodeとtokenの長さが一致した場合
+        # print(node.start, node_start)
         return parent, node, node_start, 0
+
+    def insert_node(self, parent, node, match, sub_match):
+        # nodeの途中で途切れる場合新しいnode+旧nodeという形に分割する
+        if sub_match > 0:
+            self.split_node(parent, node, match, sub_match)
+        # 過不足なく木のnodeとtokenの長さが一致したら葉だけを追加する
+        else:
+            leaf = _Node(match, node.depth + node.len())
+            node.insert_child(leaf)
+
+    # parent, nodeをparent, new_node, nodeという形に分割する
+    @staticmethod
+    def split_node(parent, node, match, sub_match):
+        new_node = _Node(node.start, node.depth)
+        node.depth += sub_match
+        node.start += sub_match
+        parent.unlink_child(node)
+        parent.insert_child(new_node)
+        new_node.insert_child(node)
+        leaf = _Node(match, node.depth)
+        new_node.insert_child(leaf)
 
     def search_pattern_sub(self, seq):
         seq_size = len(seq)
@@ -61,25 +86,25 @@ class SuffixTree:
     def search_pattern_all(self, seq):
         node = self.search_pattern_sub(seq)
         if node is None: return
-        for x in node.traverse_leaf():
-            yield x.start - x.depth
+        # for x in node.traverse_leaf():
+        #     yield x.start - x.depth
+        return sorted([x.start - x.depth for x in node.traverse_leaf()])
 
-    @staticmethod
-    def insert_node(parent, node, match, sub_match):
-        # 過不足なく木のnodeとtokenの長さが一致したら葉だけを追加する
-        if sub_match == 0:
-            leaf = _Node(match, node.depth + node.len())
-            node.insert_child(leaf)
-        # nodeの途中で途切れる場合新しいnode+旧nodeという形に分割する
-        else:
-            new_node = _Node(node.start, node.depth)
-            node.depth += sub_match
-            node.start += sub_match
-            parent.unlink_child(node)
-            parent.insert_child(new_node)
-            new_node.insert_child(node)
-            leaf = _Node(match, node.depth)
-            new_node.insert_child(leaf)
+    # デバッグ用
+    def tree_dict(self):
+        return self.tree_dict_sub(self.root)
+        # if chi
+
+    def tree_dict_sub(self, node):
+        # result = {node.start: {}}
+        # result[node.start] = {}
+        result = {}
+        if node.child is None: return ':end'
+        node = node.child
+        while node is not None:
+            result[self.tokens[node.start:node.start + node.len()]] = self.tree_dict_sub(node)
+            node = node.bros
+        return result
 
     # デバッグ用
     def print_node(self, node, tokens):
@@ -150,19 +175,23 @@ class _Node:
                 # yield from node.traverse_leaf()
                 node = node.bros
 
+    def __str__(self):
+        return f'start: {self.start}, len: {self.len()}'
+
 
 if __name__ == '__main__':
     tokens = ['body', '(string)', 'a', 'href', '(attr_val)', '(string)', '(tag_end)', '(string)', '(tag_end)', '(EOF)']
     # tokens = ['(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '()', '(b)', '(a)', '(n)', '(a)', '(n)', '(a)', '($)']
     # tokens = []
-    # tokens = 'banana banana$'
+    tokens = 'banana banana$'
     # tokens = "aabbaaab$"
+    # tokens = "banana$"
     st = SuffixTree(tokens)
     # print(st.search_pattern(['(b)', '(a)', '(n)', '(a)', '(n)', '(a)']))
     # print(st.search_pattern(['(a)', '(n)', '(a)']))
-    print(st.search_pattern(['(a)', '(n)', '(a)']))
+    print(st.search_pattern(['(string)', 'a', 'href']))
     # print([pattern for pattern in st.search_pattern_all(['(a)', '(n)', '(a)'])])
-    st.print_node(st.root, tokens)
+    # st.print_node(st.root, tokens)
     # print(st.search_pattern('an'))
     # print([pattern for pattern in st.search_pattern_all('an')])
     pass
