@@ -36,3 +36,6 @@ class CodeSequences:
                 raise Exception('!!!!otherClass')
         tokens.append(TokenEndTag())
         return tokens
+
+    def __len__(self):
+        return len(self.tokens)
